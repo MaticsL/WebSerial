@@ -102,7 +102,7 @@ export default {
           }
           reader.releaseLock()
           writer.releaseLock()
-          self.lastmessage="写入成功"
+          self.lastmessage="写入成功！灵敏度在下次连接手台时生效。"
         }
       },
       async choosePort() {
