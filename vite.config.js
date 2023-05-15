@@ -7,6 +7,7 @@ import vue from '@vitejs/plugin-vue'
 export default defineConfig({
   plugins: [vue()],
   publicPath: 'WebSerial',
+  base: '/WebSerial/',
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))

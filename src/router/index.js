@@ -6,12 +6,12 @@ const router = createRouter({
   base: '/WebSerial/',
   routes: [
     {
-      path: '/WebSerial',
+      path: '/',
       name: 'home',
       component: HomeView
     },
     {
-      path: '/WebSerial/chuni',
+      path: '/chuni',
       name: 'chuni',
       // route level code-splitting
       // this generates a separate chunk (About.[hash].js) for this route
