@@ -1,5 +1,5 @@
 <template>
-  <h2>控制器配置</h2><el-divider></el-divider>
+  <h2 @click="debugenable">控制器配置</h2><el-divider></el-divider>
   <el-row>
     <el-col :span="4"><el-button @click="choosePort" :disabled="connected">连接控制器</el-button></el-col>
     <el-col :span="20">
@@ -40,7 +40,7 @@
       max=10>
     </el-slider>
   </el-card>
-  <el-card v-if="connected">
+  <el-card v-if="false">
     <div slot="header">
       <span>灯光颜色配置</span>
       <el-button style="float: right;" type="primary" :disabled="!connected" @click="writeColor">写入灯光颜色配置</el-button>
@@ -61,7 +61,7 @@
       max=4>
     </el-slider>
   </el-card>
-  <el-card v-if="false">
+  <el-card v-if="connected&&debugEnabled">
     <div slot="header">
       <span>危险区域！</span>
     </div>
@@ -135,10 +135,16 @@ export default {
           48: '低',
           56: '较低',
           64: '非常低'
-        }
+        },
+        debugEnabledCount: 0,
+        debugEnabled: false
       }
     },
     methods: {
+      debugenable() {
+        this.debugEnabledCount+=1
+        if(this.debugEnabledCount>=5)this.debugEnabled=true
+      },
       getWriteRomPacket(addr, val) {
         return new Uint8Array([0x21, 0x40, 0x23, 0x23, 0x1c, addr, 0x00, val, val, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
       },
@@ -146,13 +152,13 @@ export default {
         return new Uint8Array([0x21, 0x40, 0x23, 0x23, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
       },
       getReadRomPacket(addr) {
-        new Uint8Array([0x21, 0x40, 0x23, 0x23, 0x1d, addr, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
+        return new Uint8Array([0x21, 0x40, 0x23, 0x23, 0x1d, addr, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
       },
       async readEEPROM() {
         let self=this
         var writer = self.portNum.writable.getWriter()
         var reader = self.portNum.readable.getReader()
-        var readEEPROMPacket = getReadRomPacket(self.eepromAddr)
+        var readEEPROMPacket = self.getReadRomPacket(self.eepromAddr)
         await writer.write(readEEPROMPacket)
         var recvCount = 0
         var result=""
@@ -170,7 +176,7 @@ export default {
       async writeEEPROM() {
         let self=this
         var writer = self.portNum.writable.getWriter()
-        var writeEEPROMPacket = getWriteRomPacket(self.eepromAddr, self.eepromValue)
+        var writeEEPROMPacket = self.getWriteRomPacket(self.eepromAddr, self.eepromValue)
         await writer.write(writeEEPROMPacket)
         writer.releaseLock()
       },
@@ -179,9 +185,9 @@ export default {
         if(self.connected&&self.portNum!=null){
           var writer = self.portNum.writable.getWriter()
           var reader = self.portNum.readable.getReader()
-          var writeSensitivePacket = getWriteRomPacket(0x54, self.sensitive)
+          var writeSensitivePacket = self.getWriteRomPacket(0x54, self.sensitive)
           await writer.write(writeSensitivePacket)
-          var readSensitivePacket = getReadRomPacket(0x54)
+          var readSensitivePacket = self.getReadRomPacket(0x54)
           await writer.write(readSensitivePacket)
           var recvCount = 0
           var sensi = ""
@@ -244,7 +250,7 @@ export default {
           }
           
           //获取固件版本号
-          var readFirmwareVersionPacket = getReadRomPacket(0x07)
+          var readFirmwareVersionPacket = self.getReadRomPacket(0x07)
           await writer.write(readFirmwareVersionPacket)
           var recvCount = 0
           var firmVersion = ""
@@ -257,7 +263,7 @@ export default {
           }
 
           //获取灵敏度
-          var readSensitivePacket = getReadRomPacket(0x54)
+          var readSensitivePacket = self.getReadRomPacket(0x54)
           await writer.write(readSensitivePacket)
           var recvCount = 0
           var sensi = ""
