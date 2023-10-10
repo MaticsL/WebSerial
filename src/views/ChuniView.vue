@@ -1,5 +1,5 @@
 <template>
-  <h2 @click="debugenable">控制器配置</h2><el-divider></el-divider>
+  <h2 @click="debugenable">chuni （白色）24-27 寸控制器配置</h2><el-divider></el-divider>
   <el-row>
     <el-col :span="4"><el-button @click="choosePort" :disabled="connected">连接控制器</el-button></el-col>
     <el-col :span="20">
@@ -26,7 +26,7 @@
       :max="sensiMax">
     </el-slider>
   </el-card>
-  <el-card v-if="false">
+  <el-card v-if="self.firmVersion>=10">
     <div slot="header">
       <span>亮度配置</span>
       <el-button style="float: right;" type="primary" :disabled="!connected" @click="writeBrightness">写入亮度配置</el-button>
@@ -46,11 +46,12 @@
       <el-button style="float: right;" type="primary" :disabled="!connected" @click="writeColor">写入灯光颜色配置</el-button>
     </div>
     <el-color-picker color-format="rgb" v-model="lightColor"></el-color-picker>
+    <el-color-picker color-format="rgb" v-model="closeColor"></el-color-picker>
   </el-card>
-  <el-card v-if="false">
+  <el-card v-if="self.firmVersion>=10">
     <div slot="header">
       <span>键型配置</span>
-      <el-button style="float: right;" type="primary" :disabled="!connected" @click="writeBrightness">写入键型配置</el-button>
+      <el-button style="float: right;" type="primary" :disabled="!connected" @click="writeKeyLayout">写入键型配置</el-button>
     </div>
     <el-slider
       v-model="keyType"
@@ -77,6 +78,7 @@ export default {
     data() {
       return {
         headMessageType: "warning",
+        firmVersion: 0,
         connected: false,
         lastmessage: "请选择端口",
         sliderType: 1, //0=noled, 1=led
@@ -86,6 +88,7 @@ export default {
         lightColor: "#000000",
         brightness: 10,
         keyType: 1,
+        closeColor: "#000000",
         keyTypeMark: {
           1: "32k",
           2: "16k",
@@ -94,16 +97,16 @@ export default {
         },
         brightnessMark: {
           0: '关闭',
-          1: '10%',
-          2: '20%',    
-          3: '30%',
-          4: '40%',
-          5: '50%',    
-          6: '60%',
-          7: '70%',
-          8: '80%',    
-          9: '90%',
-          10: '100%',
+          25: '10%',
+          50: '20%',    
+          75: '30%',
+          100: '40%',
+          125: '50%',    
+          150: '60%',
+          175: '70%',
+          200: '80%',    
+          225: '90%',
+          255: '100%',
         },
         sensitive: 8,
         sensiStep: 1,
@@ -179,6 +182,54 @@ export default {
         var writeEEPROMPacket = self.getWriteRomPacket(self.eepromAddr, self.eepromValue)
         await writer.write(writeEEPROMPacket)
         writer.releaseLock()
+      },
+      async writeKeyLayout() {
+        let self=this
+        if(self.connected&&self.portNum!=null){
+          var writer = self.portNum.writable.getWriter()
+          var reader = self.portNum.readable.getReader()
+          var writeSensitivePacket = self.getWriteRomPacket(0x54, self.sensitive)
+          await writer.write(writeSensitivePacket)
+          var readSensitivePacket = self.getReadRomPacket(0x54)
+          await writer.write(readSensitivePacket)
+          var recvCount = 0
+          var sensi = ""
+          while(recvCount<=2){
+            var res = await reader.read()
+            recvCount++
+            for(var x in res.value){
+              if(String.fromCharCode(res.value[x])!="A")sensi=sensi+String.fromCharCode(res.value[x])
+            }
+          }
+          self.sensitive = parseInt(sensi)
+          reader.releaseLock()
+          writer.releaseLock()
+          self.lastmessage="写入成功！键型在下次连接手台时生效。"
+        }
+      },
+      aysnc writeBrightness() {
+        let self=this
+        if(self.connected&&self.portNum!=null){
+          var writer = self.portNum.writable.getWriter()
+          var reader = self.portNum.readable.getReader()
+          var writeSensitivePacket = self.getWriteRomPacket(0x54, self.sensitive)
+          await writer.write(writeSensitivePacket)
+          var readSensitivePacket = self.getReadRomPacket(0x54)
+          await writer.write(readSensitivePacket)
+          var recvCount = 0
+          var sensi = ""
+          while(recvCount<=2){
+            var res = await reader.read()
+            recvCount++
+            for(var x in res.value){
+              if(String.fromCharCode(res.value[x])!="A")sensi=sensi+String.fromCharCode(res.value[x])
+            }
+          }
+          self.sensitive = parseInt(sensi)
+          reader.releaseLock()
+          writer.releaseLock()
+          self.lastmessage="写入成功！亮度在下次连接手台时生效。"
+        }
       },
       async writeSensitive() {
         let self=this
@@ -287,9 +338,39 @@ export default {
             self.sensiMin = 7
             self.sensiMax = 13
           }
+
+          //获取亮度
+          var readSensitivePacket = self.getReadRomPacket(0x54)
+          await writer.write(readSensitivePacket)
+          var recvCount = 0
+          var bri = ""
+          while(recvCount<=2){
+            var res = await reader.read()
+            recvCount++
+            for(var x in res.value){
+              if(String.fromCharCode(res.value[x])!="A")bri=bri+String.fromCharCode(res.value[x])
+            }
+          }
+          self.brightness = parseInt(bri)
+          if(self.brightness>255||self.brightness<0)self.brightness=255
+          //获取键型
+          var readSensitivePacket = self.getReadRomPacket(0x54)
+          await writer.write(readSensitivePacket)
+          var recvCount = 0
+          var keyt = ""
+          while(recvCount<=2){
+            var res = await reader.read()
+            recvCount++
+            for(var x in res.value){
+              if(String.fromCharCode(res.value[x])!="A")keyt=keyt+String.fromCharCode(res.value[x])
+            }
+          }
+          self.keyType = parseInt(keyt)
+          if(self.keyType>4||self.keyType<1)self.keyType=1
+
           self.lastmessage="已选择控制器: XDEN chunicon v2. 固件版本: " + firmVersion
+          self.firmVersion = firmVersion
           //写入灯效
-          
           self.headMessageType = "success"
           reader.releaseLock()
           writer.releaseLock()
