@@ -14,7 +14,13 @@
   <el-divider></el-divider>
   <el-card v-if="connected">
     <div slot="header">
-      <span>灵敏度配置</span>
+      <span>灵敏度配置<span>
+      <el-alert
+        title="提示"
+        type="info"
+        description="向左升高灵敏度，向右降低灵敏度，推荐带灯版本灵敏度8-11之间，不带灯版灵敏度32-45之间。"
+        show-icon>
+      </el-alert>
       <el-button style="float: right;" type="primary" :disabled="!connected" @click="writeSensitive">写入灵敏度</el-button>
     </div>
     <el-slider
@@ -22,7 +28,6 @@
       :show-tooltip="false"
       :step="sensiStep"
       :min="sensiMin"
-      :marks="sensiMarks"
       :max="sensiMax">
     </el-slider>
   </el-card>
@@ -43,6 +48,7 @@
   <el-card v-if="false">
     <div slot="header">
       <span>灯光颜色配置</span>
+
       <el-button style="float: right;" type="primary" :disabled="!connected" @click="writeColor">写入灯光颜色配置</el-button>
     </div>
     <el-color-picker color-format="rgb" v-model="lightColor"></el-color-picker>
@@ -79,7 +85,7 @@ export default {
       return {
         headMessageType: "warning",
         firmVersion: 0,
-        connected: false,
+        connected: true,
         lastmessage: "请选择端口",
         sliderType: 1, //0=noled, 1=led
         portNum: null,
@@ -110,35 +116,8 @@ export default {
         },
         sensitive: 8,
         sensiStep: 1,
-        sensiMin: 8,
-        sensiMax: 12,
-        sensiMarks0: {
-          16: '极高',
-          24: '超高',
-          32: '高',
-          40: '一般',
-          48: '低',
-          56: '较低',
-          64: '非常低'
-        },
-        sensiMarks1: {
-          7: '极高',
-          8: '超高',
-          9: '高',
-          10: '一般',
-          11: '低',
-          12: '较低',
-          13: '非常低'
-        },
-        sensiMarks: {
-          16: '极高',
-          24: '超高',
-          32: '高',
-          40: '一般',
-          48: '低',
-          56: '较低',
-          64: '非常低'
-        },
+        sensiMin: 7,
+        sensiMax: 64,
         debugEnabledCount: 0,
         debugEnabled: false
       }
@@ -188,20 +167,20 @@ export default {
         if(self.connected&&self.portNum!=null){
           var writer = self.portNum.writable.getWriter()
           var reader = self.portNum.readable.getReader()
-          var writeSensitivePacket = self.getWriteRomPacket(0x54, self.sensitive)
-          await writer.write(writeSensitivePacket)
-          var readSensitivePacket = self.getReadRomPacket(0x54)
-          await writer.write(readSensitivePacket)
+          var writekeylayoutPacket = self.getWriteRomPacket(0x54, self.keyType)
+          await writer.write(writekeylayoutPacket)
+          var readkeylayoutPacket = self.getReadRomPacket(0x54)
+          await writer.write(readkeylayoutPacket)
           var recvCount = 0
-          var sensi = ""
+          var keyt = ""
           while(recvCount<=2){
             var res = await reader.read()
             recvCount++
             for(var x in res.value){
-              if(String.fromCharCode(res.value[x])!="A")sensi=sensi+String.fromCharCode(res.value[x])
+              if(String.fromCharCode(res.value[x])!="A")keyt=keyt+String.fromCharCode(res.value[x])
             }
           }
-          self.sensitive = parseInt(sensi)
+          self.keyType = parseInt(keyt)
           reader.releaseLock()
           writer.releaseLock()
           self.lastmessage="写入成功！键型在下次连接手台时生效。"
@@ -212,20 +191,20 @@ export default {
         if(self.connected&&self.portNum!=null){
           var writer = self.portNum.writable.getWriter()
           var reader = self.portNum.readable.getReader()
-          var writeSensitivePacket = self.getWriteRomPacket(0x54, self.sensitive)
-          await writer.write(writeSensitivePacket)
-          var readSensitivePacket = self.getReadRomPacket(0x54)
-          await writer.write(readSensitivePacket)
+          var writeBrightnessPacket = self.getWriteRomPacket(0x54, self.brightness)
+          await writer.write(writeBrightnessPacket)
+          var readBrightnessPacket = self.getReadRomPacket(0x54)
+          await writer.write(readBrightnessPacket)
           var recvCount = 0
-          var sensi = ""
+          var bri = ""
           while(recvCount<=2){
             var res = await reader.read()
             recvCount++
             for(var x in res.value){
-              if(String.fromCharCode(res.value[x])!="A")sensi=sensi+String.fromCharCode(res.value[x])
+              if(String.fromCharCode(res.value[x])!="A")bri=bri+String.fromCharCode(res.value[x])
             }
           }
-          self.sensitive = parseInt(sensi)
+          self.brightness = parseInt(bri)
           reader.releaseLock()
           writer.releaseLock()
           self.lastmessage="写入成功！亮度在下次连接手台时生效。"
@@ -250,18 +229,6 @@ export default {
             }
           }
           self.sensitive = parseInt(sensi)
-          if(self.sensitive>15){
-            self.sensiMarks = self.sensiMarks0
-            self.sensiStep = 8
-            self.sensiMin = 16
-            self.sensiMax = 64
-          }
-          else{
-            self.sensiMarks = self.sensiMarks1
-            self.sensiStep = 1
-            self.sensiMin = 7
-            self.sensiMax = 13
-          }
           reader.releaseLock()
           writer.releaseLock()
           self.lastmessage="写入成功！灵敏度在下次连接手台时生效。"
@@ -326,22 +293,10 @@ export default {
             }
           }
           self.sensitive = parseInt(sensi)
-          if(self.sensitive>15){
-            self.sensiMarks = self.sensiMarks0
-            self.sensiStep = 8
-            self.sensiMin = 16
-            self.sensiMax = 64
-          }
-          else{
-            self.sensiMarks = self.sensiMarks1
-            self.sensiStep = 1
-            self.sensiMin = 7
-            self.sensiMax = 13
-          }
 
           //获取亮度
-          var readSensitivePacket = self.getReadRomPacket(0x54)
-          await writer.write(readSensitivePacket)
+          var readBrightnesstivePacket = self.getReadRomPacket(0x54)
+          await writer.write(readBrightnesstivePacket)
           var recvCount = 0
           var bri = ""
           while(recvCount<=2){
@@ -354,8 +309,8 @@ export default {
           self.brightness = parseInt(bri)
           if(self.brightness>255||self.brightness<0)self.brightness=255
           //获取键型
-          var readSensitivePacket = self.getReadRomPacket(0x54)
-          await writer.write(readSensitivePacket)
+          var readKeyTypePacket = self.getReadRomPacket(0x54)
+          await writer.write(readKeyTypePacket)
           var recvCount = 0
           var keyt = ""
           while(recvCount<=2){
