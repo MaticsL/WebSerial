@@ -1,5 +1,11 @@
 <template>
   <h2 @click="debugenable">chuni （白色）24-27 寸控制器配置</h2><el-divider></el-divider>
+    <el-alert
+      title="提示"
+      type="info"
+      description="本页面提供 chuni（白色版本）4-6air 24-27寸控制器的配置功能。请确认您的控制器符合这个版本。完成配置后，您可以直接关闭这个页面。"
+      show-icon>
+    </el-alert><br />
   <el-row>
     <el-col :span="4"><el-button @click="choosePort" :disabled="connected">连接控制器</el-button></el-col>
     <el-col :span="20">
@@ -14,24 +20,25 @@
   <el-divider></el-divider>
   <el-card v-if="connected">
     <div slot="header">
-      <span>灵敏度配置<span>
-      <el-alert
-        title="提示"
-        type="info"
-        description="向左升高灵敏度，向右降低灵敏度，推荐带灯版本灵敏度8-11之间，不带灯版灵敏度32-45之间。"
-        show-icon>
-      </el-alert>
+      <span>灵敏度配置</span>
+
       <el-button style="float: right;" type="primary" :disabled="!connected" @click="writeSensitive">写入灵敏度</el-button>
-    </div>
+    </div><br />
+    <el-alert
+      title="提示"
+      type="info"
+      description="向左升高灵敏度，向右降低灵敏度，推荐带灯版本灵敏度8-11之间，不带灯版灵敏度32-45之间。"
+      show-icon>
+    </el-alert>
     <el-slider
       v-model="sensitive"
-      :show-tooltip="false"
+      :show-tooltip="true"
       :step="sensiStep"
       :min="sensiMin"
       :max="sensiMax">
     </el-slider>
-  </el-card>
-  <el-card v-if="self.firmVersion>=10">
+  </el-card><br />
+  <el-card v-if="firmVersion>=10">
     <div slot="header">
       <span>亮度配置</span>
       <el-button style="float: right;" type="primary" :disabled="!connected" @click="writeBrightness">写入亮度配置</el-button>
@@ -39,12 +46,12 @@
     <el-slider
       v-model="brightness"
       :show-tooltip="false"
-      step=1
-      min=0
+      :step="25"
+      :min="0"
       :marks="brightnessMark"
-      max=10>
+      :max="250">
     </el-slider>
-  </el-card>
+  </el-card><br />
   <el-card v-if="false">
     <div slot="header">
       <span>灯光颜色配置</span>
@@ -54,18 +61,23 @@
     <el-color-picker color-format="rgb" v-model="lightColor"></el-color-picker>
     <el-color-picker color-format="rgb" v-model="closeColor"></el-color-picker>
   </el-card>
-  <el-card v-if="self.firmVersion>=10">
+  <el-card v-if="firmVersion>=10">
     <div slot="header">
       <span>键型配置</span>
       <el-button style="float: right;" type="primary" :disabled="!connected" @click="writeKeyLayout">写入键型配置</el-button>
-    </div>
+    </div><br />
+    <el-alert
+      title="提示"
+      type="info"
+      description="键型：32k为几乎覆盖全键盘，8k为asdfjkl;，4k为dfjk。"
+      show-icon></el-alert>
     <el-slider
       v-model="keyType"
       :show-tooltip="false"
-      step=1
-      min=1
+      :step="1"
+      :min="1"
       :marks="keyTypeMark"
-      max=4>
+      :max="4">
     </el-slider>
   </el-card>
   <el-card v-if="connected&&debugEnabled">
@@ -85,14 +97,14 @@ export default {
       return {
         headMessageType: "warning",
         firmVersion: 0,
-        connected: true,
+        connected: false,
         lastmessage: "请选择端口",
         sliderType: 1, //0=noled, 1=led
         portNum: null,
         eepromAddr: 255,
         eepromValue: 0,
         lightColor: "#000000",
-        brightness: 10,
+        brightness: 250,
         keyType: 1,
         closeColor: "#000000",
         keyTypeMark: {
@@ -112,7 +124,7 @@ export default {
           175: '70%',
           200: '80%',    
           225: '90%',
-          255: '100%',
+          250: '100%',
         },
         sensitive: 8,
         sensiStep: 1,
@@ -186,7 +198,7 @@ export default {
           self.lastmessage="写入成功！键型在下次连接手台时生效。"
         }
       },
-      aysnc writeBrightness() {
+      async writeBrightness() {
         let self=this
         if(self.connected&&self.portNum!=null){
           var writer = self.portNum.writable.getWriter()
@@ -324,7 +336,7 @@ export default {
           if(self.keyType>4||self.keyType<1)self.keyType=1
 
           self.lastmessage="已选择控制器: XDEN chunicon v2. 固件版本: " + firmVersion
-          self.firmVersion = firmVersion
+          self.firmVersion = parseInt(firmVersion)
           //写入灯效
           self.headMessageType = "success"
           reader.releaseLock()

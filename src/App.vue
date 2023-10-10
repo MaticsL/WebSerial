@@ -14,6 +14,9 @@ import HelloWorld from './components/HelloWorld.vue'
           <el-menu-item index="/chuni">
             <span slot="title">Chuni</span>
           </el-menu-item>
+          <el-menu-item index="/hangeki">
+            <span slot="title">Hangeki</span>
+          </el-menu-item>
         </el-menu>
       </nav>
     </el-aside>
