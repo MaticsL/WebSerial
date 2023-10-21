@@ -16,7 +16,8 @@
       >
       </el-alert>
     </el-col>
-  </el-row>
+  </el-row><br v-if="connecting" />
+  <el-progress v-if="connecting" :percentage="connectPercentage"></el-progress>
   <el-divider></el-divider>
   <el-card v-if="connected">
     <div slot="header">
@@ -35,7 +36,8 @@
       :show-tooltip="true"
       :step="sensiStep"
       :min="sensiMin"
-      :max="sensiMax">
+      :max="sensiMax"
+      show-input>
     </el-slider>
   </el-card><br />
   <el-card v-if="firmVersion>=10">
@@ -46,10 +48,10 @@
     <el-slider
       v-model="brightness"
       :show-tooltip="false"
-      :step="25"
+      :step="1"
       :min="0"
       :marks="brightnessMark"
-      :max="250">
+      :max="10">
     </el-slider>
   </el-card><br />
   <el-card v-if="false">
@@ -97,11 +99,13 @@ export default {
       return {
         headMessageType: "warning",
         firmVersion: 0,
+        connecting: false,
         connected: false,
         lastmessage: "请选择端口",
         sliderType: 1, //0=noled, 1=led
         portNum: null,
         eepromAddr: 255,
+        connectPercentage: 0, 
         eepromValue: 0,
         lightColor: "#000000",
         brightness: 250,
@@ -115,16 +119,16 @@ export default {
         },
         brightnessMark: {
           0: '关闭',
-          25: '10%',
-          50: '20%',    
-          75: '30%',
-          100: '40%',
-          125: '50%',    
-          150: '60%',
-          175: '70%',
-          200: '80%',    
-          225: '90%',
-          250: '100%',
+          1: '10%',
+          2: '20%',    
+          3: '30%',
+          4: '40%',
+          5: '50%',    
+          6: '60%',
+          7: '70%',
+          8: '80%',    
+          9: '90%',
+          10: '100%',
         },
         sensitive: 8,
         sensiStep: 1,
@@ -179,9 +183,9 @@ export default {
         if(self.connected&&self.portNum!=null){
           var writer = self.portNum.writable.getWriter()
           var reader = self.portNum.readable.getReader()
-          var writekeylayoutPacket = self.getWriteRomPacket(0x54, self.keyType)
+          var writekeylayoutPacket = self.getWriteRomPacket(0x5e, self.keyType)
           await writer.write(writekeylayoutPacket)
-          var readkeylayoutPacket = self.getReadRomPacket(0x54)
+          var readkeylayoutPacket = self.getReadRomPacket(0x5e)
           await writer.write(readkeylayoutPacket)
           var recvCount = 0
           var keyt = ""
@@ -203,9 +207,9 @@ export default {
         if(self.connected&&self.portNum!=null){
           var writer = self.portNum.writable.getWriter()
           var reader = self.portNum.readable.getReader()
-          var writeBrightnessPacket = self.getWriteRomPacket(0x54, self.brightness)
+          var writeBrightnessPacket = self.getWriteRomPacket(0x62, self.brightness)
           await writer.write(writeBrightnessPacket)
-          var readBrightnessPacket = self.getReadRomPacket(0x54)
+          var readBrightnessPacket = self.getReadRomPacket(0x62)
           await writer.write(readBrightnessPacket)
           var recvCount = 0
           var bri = ""
@@ -265,6 +269,8 @@ export default {
             return
           }
           //发送hello
+          self.connecting=true;
+          self.connectPercentage=0;
           var helloPacket = self.getHelloPacket()
           var writer = self.portNum.writable.getWriter()
           var reader = self.portNum.readable.getReader()
@@ -278,7 +284,7 @@ export default {
               if(pongPacket.endsWith("XDEN chunicon v2."))isGetted=true
             }
           }
-          
+          self.connectPercentage=30;
           //获取固件版本号
           var readFirmwareVersionPacket = self.getReadRomPacket(0x07)
           await writer.write(readFirmwareVersionPacket)
@@ -291,7 +297,7 @@ export default {
               if(String.fromCharCode(res.value[x])!="A")firmVersion=firmVersion+String.fromCharCode(res.value[x])
             }
           }
-
+          self.connectPercentage=50;
           //获取灵敏度
           var readSensitivePacket = self.getReadRomPacket(0x54)
           await writer.write(readSensitivePacket)
@@ -305,9 +311,10 @@ export default {
             }
           }
           self.sensitive = parseInt(sensi)
+          self.connectPercentage=70
 
           //获取亮度
-          var readBrightnesstivePacket = self.getReadRomPacket(0x54)
+          var readBrightnesstivePacket = self.getReadRomPacket(0x62)
           await writer.write(readBrightnesstivePacket)
           var recvCount = 0
           var bri = ""
@@ -320,8 +327,9 @@ export default {
           }
           self.brightness = parseInt(bri)
           if(self.brightness>255||self.brightness<0)self.brightness=255
+          self.connectPercentage=80
           //获取键型
-          var readKeyTypePacket = self.getReadRomPacket(0x54)
+          var readKeyTypePacket = self.getReadRomPacket(0x5e)
           await writer.write(readKeyTypePacket)
           var recvCount = 0
           var keyt = ""
@@ -332,9 +340,10 @@ export default {
               if(String.fromCharCode(res.value[x])!="A")keyt=keyt+String.fromCharCode(res.value[x])
             }
           }
+          self.connectPercentage=90
           self.keyType = parseInt(keyt)
           if(self.keyType>4||self.keyType<1)self.keyType=1
-
+          self.connecting=false
           self.lastmessage="已选择控制器: XDEN chunicon v2. 固件版本: " + firmVersion
           self.firmVersion = parseInt(firmVersion)
           //写入灯效
