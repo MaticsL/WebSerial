@@ -1,14 +1,15 @@
 <template>
-  <h2 @click="debugenable">chuni （白色）24-27 寸控制器配置</h2><el-divider></el-divider>
+  <h2 @click="debugenable">chuni32寸控制器配置</h2><el-divider></el-divider>
     <el-alert
       title="提示"
       type="info"
-      description="本页面提供 chuni（白色版本）4-6air 24-27寸控制器的配置功能。请确认您的控制器符合这个版本。完成配置后，您可以直接关闭这个页面。"
+      description="本页面提供 chun32 寸控制器的配置功能。请确认您的控制器符合这个版本。完成配置后，您可以直接关闭这个页面。"
       show-icon>
     </el-alert><br />
   <el-row>
+    <el-col :span="4"><el-button @click="factoryMode" :disabled="connected">进入刷机模式</el-button></el-col>
     <el-col :span="4"><el-button @click="choosePort" :disabled="connected">连接控制器</el-button></el-col>
-    <el-col :span="20">
+    <el-col :span="16">
       <el-alert
         :title="lastmessage"
         :type="headMessageType"
@@ -21,14 +22,28 @@
   <el-divider></el-divider>
   <el-card v-if="connected">
     <div slot="header">
-      <span>灵敏度配置</span>
+      <span>输出配置</span>
+
+      <el-button style="float: right;" type="primary" :disabled="!connected" @click="writeInput">写入输入配置</el-button>
+    </div><br />
+    <el-alert
+      title="提示"
+      type="info"
+      description="手台可以调节输出键盘按键或舟HID，请根据需要选择，也可以都输出。"
+      show-icon>
+    </el-alert>
+
+  </el-card><br />
+  <el-card v-if="connected">
+    <div slot="header">
+      <span>灵敏度阈值配置</span>
 
       <el-button style="float: right;" type="primary" :disabled="!connected" @click="writeSensitive">写入灵敏度</el-button>
     </div><br />
     <el-alert
       title="提示"
       type="info"
-      description="向左升高灵敏度，向右降低灵敏度，推荐带灯版本灵敏度8-11之间，不带灯版灵敏度32-45之间。"
+      description="向左升高灵敏度，向右降低灵敏度。"
       show-icon>
     </el-alert>
     <el-slider
@@ -63,7 +78,7 @@
     <el-color-picker color-format="rgb" v-model="lightColor"></el-color-picker>
     <el-color-picker color-format="rgb" v-model="closeColor"></el-color-picker>
   </el-card>
-  <el-card v-if="firmVersion>=10">
+  <el-card v-if="false">
     <div slot="header">
       <span>键型配置</span>
       <el-button style="float: right;" type="primary" :disabled="!connected" @click="writeKeyLayout">写入键型配置</el-button>
@@ -130,9 +145,9 @@ export default {
           9: '90%',
           10: '100%',
         },
-        sensitive: 8,
+        sensitive: 20,
         sensiStep: 1,
-        sensiMin: 5,
+        sensiMin: 10,
         sensiMax: 64,
         debugEnabledCount: 0,
         debugEnabled: false
@@ -164,7 +179,7 @@ export default {
           var res = await reader.read()
           recvCount++
           for(var x in res.value){
-            if(String.fromCharCode(res.value[x])!="A")result=result+String.fromCharCode(res.value[x])
+            result=result+String.fromCharCode(res.value[x])
           }
         }
         self.eepromValue = parseInt(result)
@@ -193,7 +208,7 @@ export default {
             var res = await reader.read()
             recvCount++
             for(var x in res.value){
-              if(String.fromCharCode(res.value[x])!="A")keyt=keyt+String.fromCharCode(res.value[x])
+              keyt=keyt+String.fromCharCode(res.value[x])
             }
           }
           self.keyType = parseInt(keyt)
@@ -217,7 +232,7 @@ export default {
             var res = await reader.read()
             recvCount++
             for(var x in res.value){
-              if(String.fromCharCode(res.value[x])!="A")bri=bri+String.fromCharCode(res.value[x])
+              bri=bri+String.fromCharCode(res.value[x])
             }
           }
           self.brightness = parseInt(bri)
@@ -241,7 +256,7 @@ export default {
             var res = await reader.read()
             recvCount++
             for(var x in res.value){
-              if(String.fromCharCode(res.value[x])!="A")sensi=sensi+String.fromCharCode(res.value[x])
+              sensi=sensi+String.fromCharCode(res.value[x])
             }
           }
           self.sensitive = parseInt(sensi)
@@ -277,11 +292,12 @@ export default {
           await writer.write(helloPacket)
           var pongPacket = "";
           var isGetted = false
-          while(pongPacket.length<=20&&(!isGetted)){
+          while(pongPacket.length<=27&&(!isGetted)){
             var res = await reader.read()
             for(var x in res.value){
-              if(String.fromCharCode(res.value[x])!="A")pongPacket=pongPacket+String.fromCharCode(res.value[x])
-              if(pongPacket.endsWith("XDEN chunicon v2."))isGetted=true
+              pongPacket=pongPacket+String.fromCharCode(res.value[x])
+              if(pongPacket.endsWith("XDEN chunicon v3-32 model 2."))isGetted=true
+              if(pongPacket.endsWith("XDEN chunicon v3-32 model 1."))isGetted=true
             }
           }
           if(!isGetted){
@@ -298,7 +314,7 @@ export default {
             var res = await reader.read()
             recvCount++
             for(var x in res.value){
-              if(String.fromCharCode(res.value[x])!="A")firmVersion=firmVersion+String.fromCharCode(res.value[x])
+              firmVersion=firmVersion+String.fromCharCode(res.value[x])
             }
           }
           self.connectPercentage=50;
@@ -311,7 +327,7 @@ export default {
             var res = await reader.read()
             recvCount++
             for(var x in res.value){
-              if(String.fromCharCode(res.value[x])!="A")sensi=sensi+String.fromCharCode(res.value[x])
+              sensi=sensi+String.fromCharCode(res.value[x])
             }
           }
           self.sensitive = parseInt(sensi)
@@ -326,7 +342,7 @@ export default {
             var res = await reader.read()
             recvCount++
             for(var x in res.value){
-              if(String.fromCharCode(res.value[x])!="A")bri=bri+String.fromCharCode(res.value[x])
+              bri=bri+String.fromCharCode(res.value[x])
             }
           }
           self.brightness = parseInt(bri)
@@ -341,7 +357,7 @@ export default {
             var res = await reader.read()
             recvCount++
             for(var x in res.value){
-              if(String.fromCharCode(res.value[x])!="A")keyt=keyt+String.fromCharCode(res.value[x])
+              keyt=keyt+String.fromCharCode(res.value[x])
             }
           }
           self.connectPercentage=90
@@ -360,6 +376,29 @@ export default {
           self.lastmessage="您的浏览器不支持串口通信，请使用chrome浏览器。"
         }
         //TODO 键位设置 4 8 16 32k 抗干扰开关（无 弱 强）  6air开关
+      },
+        async factoryMode() {
+        let self=this
+        if("serial" in navigator){
+          //support
+          try {
+            self.portNum = await navigator.serial.requestPort()
+          }
+          catch(err) {
+             self.lastmessage="端口选择错误：" + err
+             return
+          }
+          try {
+            await self.portNum.open({baudRate: 1200})
+            await self.portNum.setSignals({dataTerminalReady: false})
+          }
+          catch(err) {
+            self.lastmessage="打开端口错误：" + err
+            return
+          }
+          self.lastmessage="成功，请检查控制器盘符并放入固件"
+          self.headMessageType="success"
+        }
       }
     }
 }

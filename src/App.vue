@@ -12,7 +12,10 @@ import HelloWorld from './components/HelloWorld.vue'
             <span slot="title">Home</span>
           </el-menu-item>
           <el-menu-item index="/chuni">
-            <span slot="title">Chuni</span>
+            <span slot="title">Chuni24/27</span>
+          </el-menu-item>
+          <el-menu-item index="/chuni32">
+            <span slot="title">Chuni32</span>
           </el-menu-item>
           <el-menu-item index="/hangeki">
             <span slot="title">Hangeki</span>
@@ -31,10 +34,10 @@ import HelloWorld from './components/HelloWorld.vue'
 
 <style scoped>
 .mainAPP {
-  max-width: 1000px;
+  max-width: 1200px;
 }
 .el-menu-vertical:not(.el-menu--collapse) {
   width: 200px;
-  min-height: 800px;
+  min-height: 1000px;
 }
 </style>
