@@ -20,6 +20,9 @@ import HelloWorld from './components/HelloWorld.vue'
           <el-menu-item index="/hangeki">
             <span slot="title">Hangeki</span>
           </el-menu-item>
+          <el-menu-item index="/hdx">
+            <span slot="title">HDX</span>
+          </el-menu-item>
         </el-menu>
       </nav>
     </el-aside>

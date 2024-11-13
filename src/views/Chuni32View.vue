@@ -23,8 +23,7 @@
   <el-card v-if="connected">
     <div slot="header">
       <span>输出配置</span>
-
-      <el-button style="float: right;" type="primary" :disabled="!connected" @click="writeInput">写入输入配置</el-button>
+      <el-button style="float: right;" type="primary" :disabled="!connected" @click="writeInput">写入输出配置</el-button>
     </div><br />
     <el-alert
       title="提示"
@@ -32,7 +31,10 @@
       description="手台可以调节输出键盘按键或舟HID，请根据需要选择，也可以都输出。"
       show-icon>
     </el-alert>
-
+    <div>
+      <el-checkbox v-model="zhou_io_enabled" label="舟io" border size="large"></el-checkbox>
+      <el-checkbox v-model="keyboard_enabled" label="键盘输出" border size="large"></el-checkbox>
+    </div>
   </el-card><br />
   <el-card v-if="connected">
     <div slot="header">
@@ -78,7 +80,7 @@
     <el-color-picker color-format="rgb" v-model="lightColor"></el-color-picker>
     <el-color-picker color-format="rgb" v-model="closeColor"></el-color-picker>
   </el-card>
-  <el-card v-if="false">
+  <el-card v-if="firmVersion>=11">
     <div slot="header">
       <span>键型配置</span>
       <el-button style="float: right;" type="primary" :disabled="!connected" @click="writeKeyLayout">写入键型配置</el-button>
@@ -116,6 +118,8 @@ export default {
         firmVersion: 0,
         connecting: false,
         connected: false,
+        zhou_io_enabled: true,
+        keyboard_enabled: false,
         lastmessage: "请选择设备",
         sliderType: 1, //0=noled, 1=led
         portNum: null,
@@ -179,7 +183,7 @@ export default {
           var res = await reader.read()
           recvCount++
           for(var x in res.value){
-            result=result+String.fromCharCode(res.value[x])
+            if(String.fromCharCode(res.value[x])!="A")result=result+String.fromCharCode(res.value[x])
           }
         }
         self.eepromValue = parseInt(result)
@@ -241,6 +245,32 @@ export default {
           self.lastmessage="写入成功！亮度在下次连接手台时生效。"
         }
       },
+      async writeInput() {
+        let self=this
+        if(self.connected&&self.portNum!=null){
+          var writer = self.portNum.writable.getWriter()
+          var reader = self.portNum.readable.getReader()
+          var writeZhouioPacket, writeKeyboardPacket;
+          if(self.zhou_io_enabled){writeZhouioPacket = self.getWriteRomPacket(0x65, 0x01)}
+          else{
+            writeZhouioPacket = self.getWriteRomPacket(0x65, 0x02)
+          }
+          if(self.keyboard_enabled){writeKeyboardPacket = self.getWriteRomPacket(0x64, 0x01)}
+          else{
+            writeKeyboardPacket = self.getWriteRomPacket(0x64, 0x02)
+          }
+          await writer.write(writeZhouioPacket)
+          var recvCount = 0
+          while(recvCount<3){
+            var res = await reader.read()
+            recvCount++
+          }
+          await writer.write(writeKeyboardPacket)
+          reader.releaseLock()
+          writer.releaseLock()
+          self.lastmessage="写入成功！输出模式在下次连接手台时生效。"
+        }
+      },
       async writeSensitive() {
         let self=this
         if(self.connected&&self.portNum!=null){
@@ -295,7 +325,7 @@ export default {
           while(pongPacket.length<=27&&(!isGetted)){
             var res = await reader.read()
             for(var x in res.value){
-              pongPacket=pongPacket+String.fromCharCode(res.value[x])
+              if(String.fromCharCode(res.value[x])!="A")pongPacket=pongPacket+String.fromCharCode(res.value[x])
               if(pongPacket.endsWith("XDEN chunicon v3-32 model 2."))isGetted=true
               if(pongPacket.endsWith("XDEN chunicon v3-32 model 1."))isGetted=true
             }
@@ -304,7 +334,7 @@ export default {
             self.lastmessage="打开端口错误：请选择正确的设备!"
             return
           }
-          self.connectPercentage=30;
+          self.connectPercentage=20;
           //获取固件版本号
           var readFirmwareVersionPacket = self.getReadRomPacket(0x07)
           await writer.write(readFirmwareVersionPacket)
@@ -314,9 +344,36 @@ export default {
             var res = await reader.read()
             recvCount++
             for(var x in res.value){
-              firmVersion=firmVersion+String.fromCharCode(res.value[x])
+              if(String.fromCharCode(res.value[x])!="A")firmVersion=firmVersion+String.fromCharCode(res.value[x])
             }
           }
+          self.connectPercentage=40;
+          //获取输出
+          var readZhouiopacket = self.getReadRomPacket(0x65)
+          await writer.write(readZhouiopacket)
+          var recvCount = 0
+          var zhouiostr = ""
+          while(recvCount<=1){
+            var res = await reader.read()
+            recvCount++
+            for(var x in res.value){
+              if(String.fromCharCode(res.value[x])!="A")zhouiostr=zhouiostr+String.fromCharCode(res.value[x])
+            }
+          }
+          if(zhouiostr*1==1)self.zhou_io_enabled=true;else self.zhou_io_enabled=false;
+
+          var readkeyboardpacket = self.getReadRomPacket(0x64)
+          await writer.write(readkeyboardpacket)
+          var recvCount = 0
+          var keyboardstr = ""
+          while(recvCount<=1){
+            var res = await reader.read()
+            recvCount++
+            for(var x in res.value){
+              if(String.fromCharCode(res.value[x])!="A")keyboardstr=keyboardstr+String.fromCharCode(res.value[x])
+            }
+          }
+          if(keyboardstr*1==1)self.keyboard_enabled=true;else self.keyboard_enabled=false;
           self.connectPercentage=50;
           //获取灵敏度
           var readSensitivePacket = self.getReadRomPacket(0x54)
@@ -327,7 +384,7 @@ export default {
             var res = await reader.read()
             recvCount++
             for(var x in res.value){
-              sensi=sensi+String.fromCharCode(res.value[x])
+              if(String.fromCharCode(res.value[x])!="A")sensi=sensi+String.fromCharCode(res.value[x])
             }
           }
           self.sensitive = parseInt(sensi)
@@ -342,7 +399,7 @@ export default {
             var res = await reader.read()
             recvCount++
             for(var x in res.value){
-              bri=bri+String.fromCharCode(res.value[x])
+              if(String.fromCharCode(res.value[x])!="A")bri=bri+String.fromCharCode(res.value[x])
             }
           }
           self.brightness = parseInt(bri)
@@ -357,7 +414,7 @@ export default {
             var res = await reader.read()
             recvCount++
             for(var x in res.value){
-              keyt=keyt+String.fromCharCode(res.value[x])
+              if(String.fromCharCode(res.value[x])!="A")keyt=keyt+String.fromCharCode(res.value[x])
             }
           }
           self.connectPercentage=90

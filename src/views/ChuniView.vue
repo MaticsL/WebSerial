@@ -359,7 +359,6 @@ export default {
         else{
           self.lastmessage="您的浏览器不支持串口通信，请使用chrome浏览器。"
         }
-        //TODO 键位设置 4 8 16 32k 抗干扰开关（无 弱 强）  6air开关
       }
     }
 }
