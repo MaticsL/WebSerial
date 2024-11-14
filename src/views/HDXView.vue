@@ -1,3 +1,6 @@
+<script setup>
+</script>
+
 <template>
     <h2 @click="debugenable">HDX 配置</h2><el-divider></el-divider>
     <el-alert title="提示" type="info" description="本页面提供 HDX 乌蒙风格控制器的配置功能。请确认您的控制器符合这个版本。完成配置后，您可以直接关闭这个页面。" show-icon>
@@ -16,21 +19,132 @@
     </el-row>
     <br />
     <el-card v-if="connected && !halting" id="screen-testing">
-        <div class="touch-sensor-canvas-container">
-            <canvas></canvas>
-        </div>
+        <h2>触摸区域</h2>
+        <div>{{ touchingArea }}</div>
+        <br/>
     </el-card>
     <el-card v-if="connected && halting" id="settings-changing">
-        234
+        <h3>设置Ratio</h3>
+        <el-row :gutter="20">
+            <el-col :span="8">
+                <el-select v-model="RatioSetting.area" placeholder="触摸区域" :inline="true">
+                    <el-option label="A1" value="A1"></el-option>
+                    <el-option label="A2" value="A2"></el-option>
+                    <el-option label="A3" value="A3"></el-option>
+                    <el-option label="A4" value="A4"></el-option>
+                    <el-option label="A5" value="A5"></el-option>
+                    <el-option label="A6" value="A6"></el-option>
+                    <el-option label="A7" value="A7"></el-option>
+                    <el-option label="A8" value="A8"></el-option>
+                    <el-option label="B1" value="B1"></el-option>
+                    <el-option label="B2" value="B2"></el-option>
+                    <el-option label="B3" value="B3"></el-option>
+                    <el-option label="B4" value="B4"></el-option>
+                    <el-option label="B5" value="B5"></el-option>
+                    <el-option label="B6" value="B6"></el-option>
+                    <el-option label="B7" value="B7"></el-option>
+                    <el-option label="B8" value="B8"></el-option>
+                    <el-option label="C1" value="C1"></el-option>
+                    <el-option label="C2" value="C2"></el-option>
+                    <el-option label="D1" value="D1"></el-option>
+                    <el-option label="D2" value="D2"></el-option>
+                    <el-option label="D3" value="D3"></el-option>
+                    <el-option label="D4" value="D4"></el-option>
+                    <el-option label="D5" value="D5"></el-option>
+                    <el-option label="D6" value="D6"></el-option>
+                    <el-option label="D7" value="D7"></el-option>
+                    <el-option label="D8" value="D8"></el-option>
+                    <el-option label="E1" value="E1"></el-option>
+                    <el-option label="E2" value="E2"></el-option>
+                    <el-option label="E3" value="E3"></el-option>
+                    <el-option label="E4" value="E4"></el-option>
+                    <el-option label="E5" value="E5"></el-option>
+                    <el-option label="E6" value="E6"></el-option>
+                    <el-option label="E7" value="E7"></el-option>
+                    <el-option label="E8" value="E8"></el-option>
+                </el-select>
+            </el-col>
+            <el-col :span="8">
+                <el-select v-model="RatioSetting.value" placeholder="值" :inline="true">
+                    <el-option label="-5" value=-5></el-option>
+                    <el-option label="-4" value=-4></el-option>
+                    <el-option label="-3" value=-3></el-option>
+                    <el-option label="-2" value=-2></el-option>
+                    <el-option label="-1" value=-1></el-option>
+                    <el-option label="0" value=0></el-option>
+                    <el-option label="1" value=1></el-option>
+                    <el-option label="2" value=2></el-option>
+                    <el-option label="3" value=3></el-option>
+                    <el-option label="4" value=4></el-option>
+                    <el-option label="5" value=5></el-option>
+                </el-select>
+            </el-col>
+            <el-button :span="4" @click="submitRatio">
+                Submit
+            </el-button>
+        </el-row>
+        <br/>
+        <h3>设置Sensitivity</h3>
+        <el-row :gutter="20">
+            <el-col :span="8">
+                <el-select v-model="SensitivitySetting.area" placeholder="触摸区域" :inline="true">
+                    <el-option label="A1" value="0x41"></el-option>
+                    <el-option label="A3" value="0x42"></el-option>
+                    <el-option label="A2" value="0x43"></el-option>
+                    <el-option label="A4" value="0x44"></el-option>
+                    <el-option label="A5" value="0x45"></el-option>
+                    <el-option label="A6" value="0x46"></el-option>
+                    <el-option label="A7" value="0x47"></el-option>
+                    <el-option label="A8" value="0x48"></el-option>
+                    <el-option label="B1" value="0x49"></el-option>
+                    <el-option label="B2" value="0x50"></el-option>
+                    <el-option label="B3" value="0x51"></el-option>
+                    <el-option label="B4" value="0x52"></el-option>
+                    <el-option label="B5" value="0x53"></el-option>
+                    <el-option label="B6" value="0x54"></el-option>
+                    <el-option label="B7" value="0x55"></el-option>
+                    <el-option label="B8" value="0x56"></el-option>
+                    <el-option label="C1" value="0x57"></el-option>
+                    <el-option label="C2" value="0x58"></el-option>
+                    <el-option label="D1" value="0x59"></el-option>
+                    <el-option label="D2" value="0x60"></el-option>
+                    <el-option label="D3" value="0x61"></el-option>
+                    <el-option label="D4" value="0x62"></el-option>
+                    <el-option label="D5" value="0x63"></el-option>
+                    <el-option label="D6" value="0x64"></el-option>
+                    <el-option label="D7" value="0x65"></el-option>
+                    <el-option label="D8" value="0x66"></el-option>
+                    <el-option label="E1" value="0x67"></el-option>
+                    <el-option label="E2" value="0x68"></el-option>
+                    <el-option label="E3" value="0x69"></el-option>
+                    <el-option label="E4" value="0x70"></el-option>
+                    <el-option label="E5" value="0x71"></el-option>
+                    <el-option label="E6" value="0x72"></el-option>
+                    <el-option label="E7" value="0x73"></el-option>
+                    <el-option label="E8" value="0x74"></el-option>
+                </el-select>
+            </el-col>
+            <el-col :span="8">
+                <el-select v-model="SensitivitySetting.value" placeholder="值" :inline="true">
+                    <el-option label="-5" value=-5></el-option>
+                    <el-option label="-4" value=-4></el-option>
+                    <el-option label="-3" value=-3></el-option>
+                    <el-option label="-2" value=-2></el-option>
+                    <el-option label="-1" value=-1></el-option>
+                    <el-option label="0" value=0></el-option>
+                    <el-option label="1" value=1></el-option>
+                    <el-option label="2" value=2></el-option>
+                    <el-option label="3" value=3></el-option>
+                    <el-option label="4" value=4></el-option>
+                    <el-option label="5" value=5></el-option>
+                </el-select>
+            </el-col>
+            <el-button :span="4" @click="submitSensitivity">
+                Submit
+            </el-button>
+        </el-row>
     </el-card>
 </template>
-
-<style scoped>
-.touch-sensor-canvas-container {
-    width: 50vw;
-    height: 50vw;
-}
-</style>
 
 <script>
 export default {
@@ -40,10 +154,28 @@ export default {
             lastmessage: "请选择设备",
             portNum: null,
             connected: true,
-            halting: false
+            halting: false,
+            touchingArea: ['A1', 'A5', 'E8'],
+            touchingIntervalID: 0,
+            readingData: new Uint8Array(),
+            RatioSetting: {
+                area: null,
+                value:null
+            },
+            SensitivitySetting: {
+                area: null,
+                value:null
+            }
         }
     },
     methods: {
+        submitRatio() {
+            if (this.RatioSetting.area == null || this.RatioSetting.value == null) return;
+            
+        },
+        submitSensitivity() {
+            
+        },
         async factoryMode() {
             let self = this
             if ("serial" in navigator) {
@@ -82,6 +214,59 @@ export default {
             let self = this
             console.log(self.asciiToUint8('{LAr2}'));
         },
+        async startTouchListening() {
+            let self = this
+            while (!this.halting) {
+                let reader = self.portNum.getReader();
+                while (true) {
+                    const { value, done } = await reader.read();
+                    if (done) {
+                        break;
+                    }
+                    self.readingData = new Uint8Array();
+                    if (value[7] & 1) self.readingData.push("A1");
+                    if (value[7] & 2) self.readingData.push("A2");
+                    if (value[7] & 4) self.readingData.push("A3");
+                    if (value[7] & 8) self.readingData.push("A4");
+                    if (value[7] & 16) self.readingData.push("A5");
+
+                    if (value[6] & 1) self.readingData.push("A6");
+                    if (value[6] & 2) self.readingData.push("A7");
+                    if (value[6] & 4) self.readingData.push("A8");
+                    if (value[6] & 8) self.readingData.push("B1");
+                    if (value[6] & 16) self.readingData.push("B2");
+
+                    if (value[5] & 1) self.readingData.push("B3");
+                    if (value[5] & 2) self.readingData.push("B4");
+                    if (value[5] & 4) self.readingData.push("B5");
+                    if (value[5] & 8) self.readingData.push("B6");
+                    if (value[5] & 16) self.readingData.push("B7");
+
+                    if (value[4] & 1) self.readingData.push("B8");
+                    if (value[4] & 2) self.readingData.push("C1");
+                    if (value[4] & 4) self.readingData.push("C2");
+                    if (value[4] & 8) self.readingData.push("D1");
+                    if (value[4] & 16) self.readingData.push("D2");
+
+                    if (value[3] & 1) self.readingData.push("D3");
+                    if (value[3] & 2) self.readingData.push("D4");
+                    if (value[3] & 4) self.readingData.push("D5");
+                    if (value[3] & 8) self.readingData.push("D6");
+                    if (value[3] & 16) self.readingData.push("D7");
+
+                    if (value[2] & 1) self.readingData.push("D8");
+                    if (value[2] & 2) self.readingData.push("E1");
+                    if (value[2] & 4) self.readingData.push("E2");
+                    if (value[2] & 8) self.readingData.push("E3");
+                    if (value[2] & 16) self.readingData.push("E4");
+
+                    if (value[1] & 1) self.readingData.push("E5");
+                    if (value[1] & 2) self.readingData.push("E6");
+                    if (value[1] & 4) self.readingData.push("E7");
+                    if (value[1] & 8) self.readingData.push("E8");
+                }
+            }
+        },
         async choosePort() {
             let self = this
             if (this.connected == true) {
@@ -91,6 +276,7 @@ export default {
                     // await writer.write(STAT);
                     this.halting = !this.halting;
                     self.lastmessage = "退出配置设置";
+                    this.startTouchListening();
                 }
                 else {
                     let HALT = this.asciiToUint8("{HALT}");
@@ -128,6 +314,7 @@ export default {
                 connected = !connected;
                 self.lastmessage = "成功连接"
                 self.headMessageType = "success"
+                self.startTouchListening();
             }
             else {
                 self.lastmessage = "您的浏览器不支持串口通信，请使用chrome浏览器。"

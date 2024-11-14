@@ -10,8 +10,10 @@
   "dependencies": {
     "buffer": "^6.0.3",
     "element-plus": "^2.3.4",
+    "konva": "^9.3.16",
     "vue": "^3.2.47",
     "vue-buffer": "^0.0.1",
+    "vue-konva": "^3.1.2",
     "vue-router": "^4.1.6"
   },
   "devDependencies": {
