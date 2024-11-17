@@ -7,7 +7,7 @@
     </el-alert><br />
     <el-row>
         <el-col :span="4"><el-button @click="factoryMode">进入刷机模式</el-button></el-col>
-        <el-col :span="4">
+        <el-col :span="4" v-if="debugEnabled">
             <el-button @click="choosePort">
                 {{ connected ? (halting ? "进入屏幕测试" : "进入配置设置") : "连接控制器" }}
             </el-button>
@@ -18,12 +18,12 @@
         </el-col>
     </el-row>
     <br />
-    <el-card v-if="connected && !halting" id="screen-testing">
+    <el-card v-if="connected && !halting && debugEnabled" id="screen-testing">
         <h2>触摸区域</h2>
         <div>{{ touchingArea }}</div>
         <br/>
     </el-card>
-    <el-card v-if="connected && halting" id="settings-changing">
+    <el-card v-if="connected && halting && debugEnabled" id="settings-changing">
         <h3>设置Ratio</h3>
         <el-row :gutter="20">
             <el-col :span="8">
@@ -165,10 +165,16 @@ export default {
             SensitivitySetting: {
                 area: null,
                 value:null
-            }
+            },
+        debugEnabledCount: 0,
+        debugEnabled: false
         }
     },
     methods: {
+        debugenable() {
+            this.debugEnabledCount+=1
+            if(this.debugEnabledCount>=5)this.debugEnabled=true
+        },
         submitRatio() {
             if (this.RatioSetting.area == null || this.RatioSetting.value == null) return;
             
