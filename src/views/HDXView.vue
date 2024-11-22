@@ -19,7 +19,7 @@
         </el-col>
     </el-row>
     <br />
-    <el-card v-if="connected && !halting && debugEnabled" id="screen-testing">
+    <el-card v-if="connected" id="screen-testing">
         <h2>修改全部灵敏度</h2>
             <el-button :span="4" @click="addSensitivity">
                 提高灵敏度
@@ -29,7 +29,7 @@
             </el-button>
     </el-card>
     <br />
-    <el-card v-if="connected && !halting && debugEnabled" id="screen-testing">
+    <el-card v-if="connected" id="screen-testing">
         <h2>修改区域灵敏度</h2>
         <el-row :gutter="20">
             <el-col :span="8">
@@ -217,7 +217,7 @@ export default {
             lastmessage: "请选择设备",
             selectedArea: "none",
             portNum: null,
-            connected: true,
+            connected: false,
             halting: false,
             touchingArea: [],
             touchingIntervalID: 0,
@@ -236,7 +236,7 @@ export default {
     },
     methods: {
         getSensePacket(t1, t2){
-            packet = new TextEncoder().encode("sen " + t1 + " " + t2)
+            var packet = new TextEncoder().encode("sen " + t1 + " " + t2)
             console.log(packet)
             return packet
         },
@@ -395,7 +395,7 @@ export default {
                 return
             }
             self.connected=true;
-
+            self.lastmessage="成功连接"
           }
         },
         async choosePort() {
