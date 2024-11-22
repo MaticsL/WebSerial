@@ -238,6 +238,7 @@ export default {
         getSensePacket(t1, t2){
             var packet = new TextEncoder().encode("sen " + t1 + " " + t2)
             console.log(packet)
+            console.log(TextDecoder().decode(packet))
             return packet
         },
         async addSensitivity() {
@@ -248,8 +249,9 @@ export default {
             var writer = self.portNum.writable.getWriter()
             var packet = self.getSensePacket("*", "-")
             await writer.write(packet)
+            writer.releaseLock()
         },
-        async addSensitivity() {
+        async minusSensitivity() {
             let self=this
             if(!self.connected){
                 return
@@ -257,6 +259,7 @@ export default {
             var writer = self.portNum.writable.getWriter()
             var packet = self.getSensePacket("*", "+")
             await writer.write(packet)
+             writer.releaseLock()
         },
         async addAreaSensitivity() {
             let self=this
@@ -266,6 +269,7 @@ export default {
             var writer = self.portNum.writable.getWriter()
             var packet = self.getSensePacket(self.selectedArea, "-")
             await writer.write(packet)
+            writer.releaseLock()
         },
         async minusAreaSensitivity() {
             let self=this
@@ -275,6 +279,7 @@ export default {
             var writer = self.portNum.writable.getWriter()
             var packet = self.getSensePacket(self.selectedArea, "+")
             await writer.write(packet)
+            writer.releaseLock()
         },
         debugenable() {
             this.debugEnabledCount+=1
