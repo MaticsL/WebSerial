@@ -238,7 +238,6 @@ export default {
         getSensePacket(t1, t2){
             var packet = new TextEncoder().encode("sen " + t1 + " " + t2)
             console.log(packet)
-            console.log(TextDecoder().decode(packet))
             return packet
         },
         async addSensitivity() {
