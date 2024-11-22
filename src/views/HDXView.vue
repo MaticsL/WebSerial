@@ -236,7 +236,7 @@ export default {
     },
     methods: {
         getSensePacket(t1, t2){
-            var packet = new TextEncoder().encode("sen " + t1 + " " + t2)
+            var packet = new TextEncoder().encode("sen " + t1 + " " + t2 + "\n")
             console.log(packet)
             return packet
         },
