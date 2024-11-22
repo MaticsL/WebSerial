@@ -7,7 +7,8 @@
     </el-alert><br />
     <el-row>
         <el-col :span="4"><el-button @click="factoryMode">进入刷机模式</el-button></el-col>
-        <el-col :span="4" v-if="debugEnabled">
+        <el-col :span="4"><el-button @click="senseMode">修改灵敏度</el-button></el-col>
+        <el-col :span="4" v-if="0 && debugEnabled">
             <el-button @click="choosePort">
                 {{ connected ? (halting ? "进入屏幕测试" : "进入配置设置") : "连接控制器" }}
             </el-button>
@@ -19,11 +20,73 @@
     </el-row>
     <br />
     <el-card v-if="connected && !halting && debugEnabled" id="screen-testing">
+        <h2>修改全部灵敏度</h2>
+            <el-button :span="4" @click="addSensitivity">
+                提高灵敏度
+            </el-button>
+            <el-button :span="4" @click="minusSensitivity">
+                降低灵敏度
+            </el-button>
+    </el-card>
+    <br />
+    <el-card v-if="connected && !halting && debugEnabled" id="screen-testing">
+        <h2>修改区域灵敏度</h2>
+        <el-row :gutter="20">
+            <el-col :span="8">
+                <el-select v-model="selectedArea" placeholder="触摸区域" :inline="true">
+                    <el-option label="A1" value="A1"></el-option>
+                    <el-option label="A2" value="A2"></el-option>
+                    <el-option label="A3" value="A3"></el-option>
+                    <el-option label="A4" value="A4"></el-option>
+                    <el-option label="A5" value="A5"></el-option>
+                    <el-option label="A6" value="A6"></el-option>
+                    <el-option label="A7" value="A7"></el-option>
+                    <el-option label="A8" value="A8"></el-option>
+                    <el-option label="B1" value="B1"></el-option>
+                    <el-option label="B2" value="B2"></el-option>
+                    <el-option label="B3" value="B3"></el-option>
+                    <el-option label="B4" value="B4"></el-option>
+                    <el-option label="B5" value="B5"></el-option>
+                    <el-option label="B6" value="B6"></el-option>
+                    <el-option label="B7" value="B7"></el-option>
+                    <el-option label="B8" value="B8"></el-option>
+                    <el-option label="C1" value="C1"></el-option>
+                    <el-option label="C2" value="C2"></el-option>
+                    <el-option label="D1" value="D1"></el-option>
+                    <el-option label="D2" value="D2"></el-option>
+                    <el-option label="D3" value="D3"></el-option>
+                    <el-option label="D4" value="D4"></el-option>
+                    <el-option label="D5" value="D5"></el-option>
+                    <el-option label="D6" value="D6"></el-option>
+                    <el-option label="D7" value="D7"></el-option>
+                    <el-option label="D8" value="D8"></el-option>
+                    <el-option label="E1" value="E1"></el-option>
+                    <el-option label="E2" value="E2"></el-option>
+                    <el-option label="E3" value="E3"></el-option>
+                    <el-option label="E4" value="E4"></el-option>
+                    <el-option label="E5" value="E5"></el-option>
+                    <el-option label="E6" value="E6"></el-option>
+                    <el-option label="E7" value="E7"></el-option>
+                    <el-option label="E8" value="E8"></el-option>
+                </el-select>
+            </el-col>
+            <el-col :span="8">
+                <el-button :span="4" @click="addAreaSensitivity">
+                    提高灵敏度
+                </el-button>
+                <el-button :span="4" @click="minusAreaSensitivity">
+                    降低灵敏度
+                </el-button>
+            </el-col>
+        </el-row>
+        <br/>
+    </el-card>
+    <el-card v-if="0 && connected && !halting && debugEnabled" id="screen-testing">
         <h2>触摸区域</h2>
         <div>{{ touchingArea }}</div>
         <br/>
     </el-card>
-    <el-card v-if="connected && halting && debugEnabled" id="settings-changing">
+    <el-card v-if="0 && connected && halting && debugEnabled" id="settings-changing">
         <h3>设置Ratio</h3>
         <el-row :gutter="20">
             <el-col :span="8">
@@ -152,10 +215,11 @@ export default {
         return {
             headMessageType: "warning",
             lastmessage: "请选择设备",
+            selectedArea: "none",
             portNum: null,
             connected: true,
             halting: false,
-            touchingArea: ['A1', 'A5', 'E8'],
+            touchingArea: [],
             touchingIntervalID: 0,
             readingData: new Uint8Array(),
             RatioSetting: {
@@ -171,6 +235,47 @@ export default {
         }
     },
     methods: {
+        getSensePacket(t1, t2){
+            packet = new TextEncoder().encode("sen " + t1 + " " + t2)
+            console.log(packet)
+            return packet
+        },
+        async addSensitivity() {
+            let self=this
+            if(!self.connected){
+                return
+            }
+            var writer = self.portNum.writable.getWriter()
+            var packet = self.getSensePacket("*", "-")
+            await writer.write(packet)
+        },
+        async addSensitivity() {
+            let self=this
+            if(!self.connected){
+                return
+            }
+            var writer = self.portNum.writable.getWriter()
+            var packet = self.getSensePacket("*", "+")
+            await writer.write(packet)
+        },
+        async addAreaSensitivity() {
+            let self=this
+            if(!self.connected){
+                return
+            }
+            var writer = self.portNum.writable.getWriter()
+            var packet = self.getSensePacket(self.selectedArea, "-")
+            await writer.write(packet)
+        },
+        async minusAreaSensitivity() {
+            let self=this
+            if(!self.connected){
+                return
+            }
+            var writer = self.portNum.writable.getWriter()
+            var packet = self.getSensePacket(self.selectedArea, "+")
+            await writer.write(packet)
+        },
         debugenable() {
             this.debugEnabledCount+=1
             if(this.debugEnabledCount>=5)this.debugEnabled=true
@@ -198,8 +303,6 @@ export default {
                     await self.portNum.setSignals({ dataTerminalReady: false })
                 }
                 catch (err) {
-                    self.lastmessage = "打开端口错误：" + err
-                    return
                 }
                 self.lastmessage = "成功，请检查控制器盘符并放入固件"
                 self.headMessageType = "success"
@@ -272,6 +375,28 @@ export default {
                     if (value[1] & 8) self.readingData.push("E8");
                 }
             }
+        },
+        async senseMode() {
+            let self=this
+            if("serial" in navigator){
+            //support
+            try {
+                self.portNum = await navigator.serial.requestPort()
+            }
+            catch(err) {
+                self.lastmessage="端口选择错误：" + err
+                return
+            }
+            try {
+                await self.portNum.open({baudRate: 1000000})
+            }
+            catch(err) {
+                self.lastmessage="打开端口错误：" + err
+                return
+            }
+            self.connected=true;
+
+          }
         },
         async choosePort() {
             let self = this
