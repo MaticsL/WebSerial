@@ -19,7 +19,55 @@
         </el-col>
     </el-row>
     <br />
-    <el-card v-if="connected" id="screen-testing">
+    <el-card v-if="connected" >
+        <h2>12p切换</h2>
+            <el-button :span="4" @click="set1p">
+                1p
+            </el-button>
+            <el-button :span="4" @click="set2p">
+                2p
+            </el-button>
+    </el-card>
+    <br />
+    <el-card v-if="connected" >
+        <h2>输出切换</h2>
+            <el-button :span="4" @click="setIO">
+                IO
+            </el-button>
+            <el-button :span="4" @click="setKeyboard">
+                键盘
+            </el-button>
+            <el-button :span="4" @click="setDouble">
+                IO+键盘
+            </el-button>
+            <el-button :span="4" @click="setNoOutput">
+                无
+            </el-button>
+    </el-card>
+    <br />
+    <el-card v-if="connected" >
+        <h2>修改亮度</h2>
+            <el-button :span="3" @click="setBrightness(0)">
+                0%
+            </el-button>
+            <el-button :span="3" @click="setBrightness(29)">
+                20%
+            </el-button>
+            <el-button :span="3" @click="setBrightness(58)">
+                40%
+            </el-button>
+            <el-button :span="3" @click="setBrightness(87)">
+                60%
+            </el-button>
+            <el-button :span="3" @click="setBrightness(116)">
+                80%
+            </el-button>
+            <el-button :span="3" @click="setBrightness(145)">
+                100%
+            </el-button>
+    </el-card>
+    <br />
+    <el-card v-if="connected" >
         <h2>修改全部灵敏度</h2>
             <el-button :span="4" @click="addSensitivity">
                 提高灵敏度
@@ -27,9 +75,12 @@
             <el-button :span="4" @click="minusSensitivity">
                 降低灵敏度
             </el-button>
+            <el-button :span="4" @click="resetSensitivity">
+                重置灵敏度
+            </el-button>
     </el-card>
     <br />
-    <el-card v-if="connected" id="screen-testing">
+    <el-card v-if="connected" >
         <h2>修改区域灵敏度</h2>
         <el-row :gutter="20">
             <el-col :span="8">
@@ -81,7 +132,7 @@
         </el-row>
         <br/>
     </el-card>
-    <el-card v-if="0 && connected && !halting && debugEnabled" id="screen-testing">
+    <el-card v-if="0 && connected && !halting && debugEnabled" >
         <h2>触摸区域</h2>
         <div>{{ touchingArea }}</div>
         <br/>
@@ -237,7 +288,6 @@ export default {
     methods: {
         getSensePacket(t1, t2){
             var packet = new TextEncoder().encode("sen " + t1 + " " + t2 + "\n")
-            console.log(packet)
             return packet
         },
         async addSensitivity() {
@@ -284,12 +334,61 @@ export default {
             this.debugEnabledCount+=1
             if(this.debugEnabledCount>=5)this.debugEnabled=true
         },
+        async setBrightness(num) {
+            let self=this
+            var writer = self.portNum.writable.getWriter()
+            var packet = new TextEncoder().encode("bri " + num.toString()  + "\n")
+            await writer.write(packet)
+             writer.releaseLock()
+        },
         submitRatio() {
             if (this.RatioSetting.area == null || this.RatioSetting.value == null) return;
             
         },
         submitSensitivity() {
             
+        },
+        async set1p(){
+            let self=this
+            var writer = self.portNum.writable.getWriter()
+            var packet = new TextEncoder().encode("1p\n")
+            await writer.write(packet)
+            writer.releaseLock()
+        },
+        async set2p(){
+            let self=this
+            var writer = self.portNum.writable.getWriter()
+            var packet = new TextEncoder().encode("2p\n")
+            await writer.write(packet)
+            writer.releaseLock()
+        },
+        async setKeyboard(){
+            let self=this
+            var writer = self.portNum.writable.getWriter()
+            var packet = new TextEncoder().encode("out key\n")
+            await writer.write(packet)
+            writer.releaseLock()
+        },
+        async setIO(){
+            let self=this
+            var writer = self.portNum.writable.getWriter()
+            var packet = new TextEncoder().encode("out io\n")
+            await writer.write(packet)
+            writer.releaseLock()
+        },
+        async setDouble(){
+            let self=this
+            var writer = self.portNum.writable.getWriter()
+            var packet = new TextEncoder().encode("out double\n")
+            await writer.write(packet)
+            writer.releaseLock()
+        },
+        async setNoOutput(){
+            let self=this
+            var writer = self.portNum.writable.getWriter()
+            var packet = new TextEncoder().encode("out none\n")
+            await writer.write(packet)
+            writer.releaseLock()
         },
         async factoryMode() {
             let self = this
@@ -379,6 +478,44 @@ export default {
                     if (value[1] & 8) self.readingData.push("E8");
                 }
             }
+        },
+        async resetSensitivity() {
+            let self=this
+            if(!self.connected){
+                return
+            }
+            var writer = self.portNum.writable.getWriter()
+            var packet = self.getSensePacket("*", "0")
+            await writer.write(packet)
+            var packet = self.getSensePacket("A6", "1")
+            await writer.write(packet)
+            var packet = self.getSensePacket("B1", "2")
+            await writer.write(packet)
+            var packet = self.getSensePacket("B2", "2")
+            await writer.write(packet)
+            var packet = self.getSensePacket("B5", "1")
+            await writer.write(packet)
+            var packet = self.getSensePacket("B6", "1")
+            await writer.write(packet)
+            var packet = self.getSensePacket("B7", "1")
+            await writer.write(packet)
+            var packet = self.getSensePacket("B8", "1")
+            await writer.write(packet)
+            var packet = self.getSensePacket("C1", "5")
+            await writer.write(packet)
+            var packet = self.getSensePacket("C2", "5")
+            await writer.write(packet)
+            var packet = self.getSensePacket("D5", "-")
+            await writer.write(packet)
+            var packet = self.getSensePacket("D7", "-")
+            await writer.write(packet)
+            var packet = self.getSensePacket("D8", "-")
+            await writer.write(packet)
+            var packet = self.getSensePacket("E1", "1")
+            await writer.write(packet)
+            var packet = self.getSensePacket("E2", "5")
+            await writer.write(packet)
+             writer.releaseLock();
         },
         async senseMode() {
             let self=this
