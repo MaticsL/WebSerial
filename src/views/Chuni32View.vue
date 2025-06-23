@@ -99,6 +99,25 @@
       :max="4">
     </el-slider>
   </el-card>
+  <el-card v-if="firmVersion>=13">
+    <div slot="header">
+      <span>Slider延迟配置</span>
+      <el-button style="float: right;" type="primary" :disabled="!connected" @click="writeSliderLatency">写入键型配置</el-button>
+    </div><br />
+    <el-alert
+      title="提示"
+      type="info"
+      description="Slider延迟，用于平衡air延迟使用，可以设置0-14档，每档大约3ms"
+      show-icon></el-alert>
+    <el-slider
+      v-model="sliderLatency"
+      :show-tooltip="false"
+      :step="1"
+      :min="0"
+      :marks="sliderLatencyMark"
+      :max="14">
+    </el-slider>
+  </el-card>
   <el-card v-if="connected&&debugEnabled">
     <div slot="header">
       <span>危险区域！</span>
@@ -136,6 +155,24 @@ export default {
           3: "8k",
           4: "4k"
         },
+        sliderLatencyMark: {
+          0: "0ms",
+          1: "3ms",
+          2: "6ms",
+          3: "9ms", 
+          4: "12ms",
+          5: "15ms",
+          6: "18ms",
+          7: "21ms",
+          8: "24ms",
+          9: "27ms", 
+          10: "30ms",
+          11: "33ms",
+          12: "36ms",
+          13: "39ms",
+          14: "42ms", 
+        },
+        sliderLatency: 1,
         brightnessMark: {
           0: '关闭',
           1: '10%',
@@ -240,6 +277,30 @@ export default {
             }
           }
           self.brightness = parseInt(bri)
+          reader.releaseLock()
+          writer.releaseLock()
+          self.lastmessage="写入成功！亮度在下次连接手台时生效。"
+        }
+      },
+      async writeSliderLatency() {
+        let self=this
+        if(self.connected&&self.portNum!=null){
+          var writer = self.portNum.writable.getWriter()
+          var reader = self.portNum.readable.getReader()
+          var writeLatencyPacket = self.getWriteRomPacket(0xf7, self.sliderLatency)
+          await writer.write(writeLatencyPacket)
+          var readLatencyPacket = self.getReadRomPacket(0xf7)
+          await writer.write(readLatencyPacket)
+          var recvCount = 0
+          var bri = ""
+          while(recvCount<=2){
+            var res = await reader.read()
+            recvCount++
+            for(var x in res.value){
+              bri=bri+String.fromCharCode(res.value[x])
+            }
+          }
+          self.sliderLatency = parseInt(bri)
           reader.releaseLock()
           writer.releaseLock()
           self.lastmessage="写入成功！亮度在下次连接手台时生效。"
@@ -404,6 +465,20 @@ export default {
           }
           self.brightness = parseInt(bri)
           if(self.brightness>255||self.brightness<0)self.brightness=255
+          // slider延迟
+          var readLatencyPacket = self.getReadRomPacket(0xf7)
+          await writer.write(readLatencyPacket)
+          var recvCount = 0
+          var latency = ""
+          while(recvCount<=2){
+            var res = await reader.read()
+            recvCount++
+            for(var x in res.value){
+              if(String.fromCharCode(res.value[x])!="A")latency=latency+String.fromCharCode(res.value[x])
+            }
+          }
+          self.sliderLatency = parseInt(latency)
+          if(self.sliderLatency>14||self.sliderLatency<0)self.sliderLatency=1          
           self.connectPercentage=80
           //获取键型
           var readKeyTypePacket = self.getReadRomPacket(0x5e)
