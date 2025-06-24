@@ -79,7 +79,7 @@
     </div>
     <el-color-picker color-format="rgb" v-model="lightColor"></el-color-picker>
     <el-color-picker color-format="rgb" v-model="closeColor"></el-color-picker>
-  </el-card>
+  </el-card><br />
   <el-card v-if="firmVersion>=11">
     <div slot="header">
       <span>键型配置</span>
@@ -98,11 +98,11 @@
       :marks="keyTypeMark"
       :max="4">
     </el-slider>
-  </el-card>
+  </el-card><br />
   <el-card v-if="firmVersion>=13">
     <div slot="header">
       <span>Slider延迟配置</span>
-      <el-button style="float: right;" type="primary" :disabled="!connected" @click="writeSliderLatency">写入键型配置</el-button>
+      <el-button style="float: right;" type="primary" :disabled="!connected" @click="writeSliderLatency">写入延迟配置</el-button>
     </div><br />
     <el-alert
       title="提示"
@@ -243,16 +243,7 @@ export default {
           await writer.write(writekeylayoutPacket)
           var readkeylayoutPacket = self.getReadRomPacket(0x5e)
           await writer.write(readkeylayoutPacket)
-          var recvCount = 0
-          var keyt = ""
-          while(recvCount<=2){
-            var res = await reader.read()
-            recvCount++
-            for(var x in res.value){
-              keyt=keyt+String.fromCharCode(res.value[x])
-            }
-          }
-          self.keyType = parseInt(keyt)
+
           reader.releaseLock()
           writer.releaseLock()
           self.lastmessage="写入成功！键型在下次连接手台时生效。"
@@ -267,16 +258,7 @@ export default {
           await writer.write(writeBrightnessPacket)
           var readBrightnessPacket = self.getReadRomPacket(0x62)
           await writer.write(readBrightnessPacket)
-          var recvCount = 0
-          var bri = ""
-          while(recvCount<=2){
-            var res = await reader.read()
-            recvCount++
-            for(var x in res.value){
-              bri=bri+String.fromCharCode(res.value[x])
-            }
-          }
-          self.brightness = parseInt(bri)
+
           reader.releaseLock()
           writer.releaseLock()
           self.lastmessage="写入成功！亮度在下次连接手台时生效。"
@@ -291,16 +273,7 @@ export default {
           await writer.write(writeLatencyPacket)
           var readLatencyPacket = self.getReadRomPacket(0xf7)
           await writer.write(readLatencyPacket)
-          var recvCount = 0
-          var bri = ""
-          while(recvCount<=2){
-            var res = await reader.read()
-            recvCount++
-            for(var x in res.value){
-              bri=bri+String.fromCharCode(res.value[x])
-            }
-          }
-          self.sliderLatency = parseInt(bri)
+
           reader.releaseLock()
           writer.releaseLock()
           self.lastmessage="写入成功！亮度在下次连接手台时生效。"
@@ -321,12 +294,6 @@ export default {
             writeKeyboardPacket = self.getWriteRomPacket(0x64, 0x02)
           }
           await writer.write(writeZhouioPacket)
-          var recvCount = 0
-          while(recvCount<3){
-            var res = await reader.read()
-            recvCount++
-          }
-          await writer.write(writeKeyboardPacket)
           reader.releaseLock()
           writer.releaseLock()
           self.lastmessage="写入成功！输出模式在下次连接手台时生效。"
@@ -341,16 +308,7 @@ export default {
           await writer.write(writeSensitivePacket)
           var readSensitivePacket = self.getReadRomPacket(0x54)
           await writer.write(readSensitivePacket)
-          var recvCount = 0
-          var sensi = ""
-          while(recvCount<=2){
-            var res = await reader.read()
-            recvCount++
-            for(var x in res.value){
-              sensi=sensi+String.fromCharCode(res.value[x])
-            }
-          }
-          self.sensitive = parseInt(sensi)
+
           reader.releaseLock()
           writer.releaseLock()
           self.lastmessage="写入成功！灵敏度在下次连接手台时生效。"
