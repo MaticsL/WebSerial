@@ -294,6 +294,7 @@ export default {
             writeKeyboardPacket = self.getWriteRomPacket(0x64, 0x02)
           }
           await writer.write(writeZhouioPacket)
+          await writer.write(writeKeyboardPacket)
           reader.releaseLock()
           writer.releaseLock()
           self.lastmessage="写入成功！输出模式在下次连接手台时生效。"
