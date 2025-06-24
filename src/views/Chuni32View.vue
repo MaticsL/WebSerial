@@ -294,6 +294,11 @@ export default {
             writeKeyboardPacket = self.getWriteRomPacket(0x64, 0x02)
           }
           await writer.write(writeZhouioPacket)
+          var recvCount = 0
+          while(recvCount<3){
+            var res = await reader.read()
+            recvCount++
+          }
           await writer.write(writeKeyboardPacket)
           reader.releaseLock()
           writer.releaseLock()
