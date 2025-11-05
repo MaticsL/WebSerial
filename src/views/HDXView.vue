@@ -3,7 +3,7 @@
 
 <template>
     <h2 @click="debugenable">HDX 配置</h2><el-divider></el-divider>
-    <el-alert title="提示" type="info" description="本页面提供 HDX 乌蒙风格控制器的配置功能。请确认您的控制器符合这个版本。完成配置后，您可以直接关闭这个页面。" show-icon>
+    <el-alert title="提示" type="info" description="本页面提供 HDX 乌蒙风格控制器的配置功能。请确认您的控制器符合这个版本。请连接手台Debug端口，完成配置后，您可以直接关闭这个页面。" show-icon>
     </el-alert><br />
     <el-row>
         <el-col :span="4"><el-button @click="factoryMode">进入刷机模式</el-button></el-col>
@@ -26,6 +26,16 @@
             </el-button>
             <el-button :span="4" @click="set2p">
                 2p
+            </el-button>
+    </el-card>
+    <br />
+    <el-card v-if="connected" >
+        <h2>触摸屏方向</h2>
+            <el-button :span="4" @click="setScreenDirStd">
+                正
+            </el-button>
+            <el-button :span="4" @click="setScreenDirRev">
+                反
             </el-button>
     </el-card>
     <br />
@@ -373,6 +383,20 @@ export default {
             let self=this
             var writer = self.portNum.writable.getWriter()
             var packet = new TextEncoder().encode("out io\n")
+            await writer.write(packet)
+            writer.releaseLock()
+        },
+        async setScreenDirStd(){
+            let self=this
+            var writer = self.portNum.writable.getWriter()
+            var packet = new TextEncoder().encode("touchscrenn std\n")
+            await writer.write(packet)
+            writer.releaseLock()
+        },
+        async setScreenDirRev(){
+            let self=this
+            var writer = self.portNum.writable.getWriter()
+            var packet = new TextEncoder().encode("touchscrenn reverse\n")
             await writer.write(packet)
             writer.releaseLock()
         },
