@@ -389,14 +389,14 @@ export default {
         async setScreenDirStd(){
             let self=this
             var writer = self.portNum.writable.getWriter()
-            var packet = new TextEncoder().encode("touchscrenn std\n")
+            var packet = new TextEncoder().encode("touchscreen std\n")
             await writer.write(packet)
             writer.releaseLock()
         },
         async setScreenDirRev(){
             let self=this
             var writer = self.portNum.writable.getWriter()
-            var packet = new TextEncoder().encode("touchscrenn reverse\n")
+            var packet = new TextEncoder().encode("touchscreen reverse\n")
             await writer.write(packet)
             writer.releaseLock()
         },
